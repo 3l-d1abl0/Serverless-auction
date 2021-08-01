@@ -1,0 +1,14 @@
+{
+    "name": "auth-service",
+    "version": "1.0.0",
+    "author": "3l-d1abl0",
+    "description": "Service for Authentication and Authorization !",
+    "license": "MIT",
+    "dependencies": {
+      "jsonwebtoken": "^8.1.0"
+    },
+    "devDependencies": {
+      "serverless-bundle": "^1.3.3"
+    }
+  }
+  

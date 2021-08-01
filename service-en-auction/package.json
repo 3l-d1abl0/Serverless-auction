@@ -1,8 +1,8 @@
 {
   "name": "service-en-auction",
   "version": "1.0.0",
-  "description": "Codingly template for Serverless Framework projects",
-  "author": "Ariel Weinberger <ariel@codingly.io>",
+  "description": "Service to Create Auctions",
+  "author": "3l-d1abl0",
   "license": "MIT",
   "devDependencies": {
     "babel-core": "^6.25.0",
