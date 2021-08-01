@@ -42,7 +42,7 @@ functions:
           method: GET
           path: /auction/{id}
 
-  palceBid:
+  placeBid:
     handler: src/handlers/placeBid.handler
     events:
       - http:
