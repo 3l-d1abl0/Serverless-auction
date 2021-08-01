@@ -1,9 +1,8 @@
 import AWS from 'aws-sdk';
-import middy from '@middy/core';
-import httpEventNormalizer from '@middy/http-event-normalizer';
-import httpJsonBodyParser from '@middy/http-json-body-parser';
-import htpErrorHandler from '@middy/http-error-handler';
 import createError from 'http-errors';
+import validator from '@middy/validator';
+import placeBidSchema from '../lib/schemas/placeBidSchema';
+import commonMiddleware from '../lib/commonMiddleware';
 import { getAuctionById } from './getAuction';
 
 const dynamodb = new AWS.DynamoDB.DocumentClient();
@@ -50,9 +49,7 @@ let updatedAuction;
   };
 }
 
-export const handler = middy(placeBid)
-.use(httpJsonBodyParser())
-.use(httpEventNormalizer())
-.use(htpErrorHandler());
+export const handler = commonMiddleware(placeBid)
+  .use(validator({ inputSchema: placeBidSchema}));
 
 
