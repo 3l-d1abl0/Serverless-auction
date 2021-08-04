@@ -33,6 +33,10 @@ provider:
   iamRoleStatements:
     - ${file(iam/SendMailIAM.yml):SendMailIAM}
 
+resources:
+  Resources:
+    MailQueue: ${file(resources/MailQueue.yml):MailQueue}
+
 # you can overwrite defaults here
 #  stage: dev
 #  region: us-east-1
@@ -69,6 +73,10 @@ provider:
 functions:
   sendMail:
     handler: src/handlers/sendMail.handler
+    events:
+      - sqs:
+          arn: ${self:custom.mailQueue.arn}
+          batchSize: 1
 #    The following are a few example events you can configure
 #    NOTE: Please make sure to change your handler code to work with those events
 #    Check the event documentation for details
@@ -121,5 +129,8 @@ functions:
 #       Description: "Description for the output"
 #       Value: "Some output value"
 custom:
+  mailQueue:
+    name: MailQueue-${self:provider.stage}
+    arn: !GetAtt MailQueue.Arn
   bundle:
     linting: true
