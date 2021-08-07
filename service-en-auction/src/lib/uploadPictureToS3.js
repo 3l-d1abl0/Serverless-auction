@@ -13,5 +13,5 @@ export async function uploadPicturetoS3(key, body){
     }).promise();
 
 
-    return result;
+    return result.Location;
 }
