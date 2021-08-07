@@ -1,9 +1,11 @@
 import { getAuctionById } from "./getAuction";
 import { uploadPicturetoS3 } from "../lib/uploadPictureToS3";
+import validator from '@middy/validator';
 import middy from '@middy/core';
 import httpErrorHandler from '@middy/http-error-handler';
 import createHttpError from "http-errors";
 import { setAuctionPictureUrl } from '../lib/setAuctionPictureUrl';
+import uploadAuctionPictureSchema from '../lib/schemas/uploadAuctionPictureSchema';
 
 export async function uploadAuctionPicture(event){
 
@@ -38,4 +40,6 @@ export async function uploadAuctionPicture(event){
 }
 
 export const handler = middy(uploadAuctionPicture)
-    .use(httpErrorHandler());
+  .use(httpErrorHandler())
+  .use(validator({ inputSchema: uploadAuctionPictureSchema }))
+  .use(cors());
