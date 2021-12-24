@@ -1,4 +1,6 @@
 const schema = {
+    type: 'object',
+    required: ['body'],
     properties: {
       body: {
         type: 'string',
@@ -6,7 +8,6 @@ const schema = {
         pattern: '\=$'
       },
     },
-    required: ['body'],
   };
-  
+
   export default schema;
