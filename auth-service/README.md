@@ -5,6 +5,7 @@ This Service handles the jwt Token from the request via Validator Lambda in API 
 
 * Keep your Auth0 certificate as secret.pem in the auth-service folder as it will be used by Lambda Authorizer
 ```
+npm install
 sls deploy --verbose --stage dev --aws-profile <aws-profile>
 ```
 
