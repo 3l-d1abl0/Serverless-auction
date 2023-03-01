@@ -13,7 +13,7 @@ Below are the Steps for Deploying Backend Service:
 1. [Deploy Auth Service] (https://github.com/3l-d1abl0/Serverless-auction/tree/main/auth-service)
 2. [Deploy Notification Service] (https://github.com/3l-d1abl0/Serverless-auction/tree/main/notification-service)
 3. [Deploy Auction Service] (https://github.com/3l-d1abl0/Serverless-auction/tree/main/service-en-auction)
-4. [Deploy Frontend Service] ()
+4. [Deploy Frontend Service] (https://github.com/3l-d1abl0/Serverless-Auction-Frontend)
 5. Access web app at port 3000
 
 *Notification Sevice must be deployed before Auction Service as it references Notification Service when deploying.
