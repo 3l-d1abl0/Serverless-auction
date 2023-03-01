@@ -1,10 +1,15 @@
-# Serverless auction
+# Auction Service
 
-coming soon ...
+This service handles the creation of auctions and bidding.
 
-## Getting started
+Steps to Deploy:
 ```
-cd project_folder/
 npm install
-sls deploy --verbose --stage dev --aws-profile default
+sls deploy --verbose --stage dev --aws-profile <aws-profile>
 ```
+
+Check for the Stack Output and look out for endpoint:
+Use the url as the endpoint for the Backedn Service.
+
+eg:
+https://some.aws.domain/dev
