@@ -4,6 +4,10 @@ A small project built using Serverless Framework.
 An auction Platform built using AWS services, namely, API Gateway, Lambda, SQS, DynamoDB.
 User can create new Auctions. Other users can bid on that Item. The Auction is sold to the highest Bidder.
 
+## Architecture
+
+![Auction Architecture](/assets/serverless-auction.png "Auction Architecture")
+
 ## Getting started
 
 As per the Architecture the Backend Services are hosted on AWS and Web App is built on NodeJS.
