@@ -11,23 +11,22 @@
 #
 # Happy Coding!
 
-service:
-  name: auth-service
+service: auth-service
 # app and org for use with dashboard.serverless.com
 #app: your-app-name
 #org: your-org-name
 
-plugins:
-  - serverless-bundle
-  - serverless-plugin-typescript
+#  - serverless-bundle
+#plugins:
+#  - serverless-plugin-typescript
 
 # You can pin your service to only deploy with a specific Serverless version
 # Check out our docs for more details
-frameworkVersion: '2'
+frameworkVersion: '4'
 
 provider:
   name: aws
-  runtime: nodejs23.x
+  runtime: nodejs22.x
   memorySize: 256
   stage: ${opt:stage, 'dev'}
   region: ap-south-1

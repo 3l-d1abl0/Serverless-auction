@@ -4,6 +4,7 @@
   "author": "3l-d1abl0",
   "description": "Service for Authentication and Authorization !",
   "license": "MIT",
+  "type": "module",
   "dependencies": {
     "@types/aws-lambda": "^8.10.147",
     "@types/serverless": "^3.12.27",
