@@ -1,28 +1,42 @@
 {
-  "name": "service-en-auction",
+  "name": "auction-service",
   "version": "1.0.0",
   "description": "Service to Create Auctions",
   "author": "3l-d1abl0",
   "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "build": "node esbuild.config.js",
+    "deploy": "npm run build",
+    "lint": "eslint . --ext .ts",
+    "typecheck": "tsc --noEmit"
+  },
   "devDependencies": {
-    "babel-core": "^6.25.0",
-    "babel-loader": "^7.1.1",
-    "babel-plugin-transform-runtime": "^6.23.0",
-    "babel-polyfill": "^6.23.0",
-    "babel-preset-env": "^1.6.0",
-    "serverless-bundle": "^4.3.1",
+    "@types/aws-lambda": "^8.10.126",
+    "@types/http-errors": "^2.0.4",
+    "@types/jest": "^29.5.8",
+    "@types/node": "^20.9.0",
+    "@types/uuid": "^9.0.7",
+    "esbuild": "^0.25.0",
+    "glob": "^11.0.1",
+    "jest": "^29.7.0",
+    "serverless-plugin-typescript": "^2.1.5",
     "serverless-pseudo-parameters": "^2.5.0",
-    "webpack": "^4.35.2"
+    "ts-jest": "^29.1.1",
+    "typescript": "^5.2.2"
   },
   "dependencies": {
-    "@middy/core": "^1.5.0",
-    "@middy/http-cors": "^2.4.3",
-    "@middy/http-error-handler": "^1.5.0",
-    "@middy/http-event-normalizer": "^1.5.0",
-    "@middy/http-json-body-parser": "^1.5.0",
-    "@middy/validator": "^2.4.2",
-    "aws-sdk": "^2.639.0",
-    "http-errors": "^1.8.0",
-    "uuid": "^8.3.1"
+    "@aws-sdk/client-dynamodb": "^3.450.0",
+    "@aws-sdk/client-s3": "^3.450.0",
+    "@aws-sdk/client-sqs": "^3.450.0",
+    "@aws-sdk/lib-dynamodb": "^3.450.0",
+    "@middy/core": "^4.6.4",
+    "@middy/http-cors": "^4.6.4",
+    "@middy/http-error-handler": "^4.6.4",
+    "@middy/http-event-normalizer": "^4.6.4",
+    "@middy/http-json-body-parser": "^4.6.4",
+    "@middy/validator": "^4.6.4",
+    "http-errors": "^2.0.0",
+    "uuid": "^9.0.1"
   }
 }
