@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "build": "node esbuild.config.js",
-    "deploy": "npm run build && serverless deploy",
+    "deploy": "npm run build",
     "lint": "eslint . --ext .ts",
     "typecheck": "tsc --noEmit"
   },

@@ -1,80 +1,47 @@
 import { SESClient, SendEmailCommand } from '@aws-sdk/client-ses';
-import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
-
-const ses = new SESClient({ region: process.env.AWS_REGION || 'us-east-1' });
+import { SQSEvent, SQSRecord, Context } from 'aws-lambda';
 
 interface EmailPayload {
-  to: string | string[];
-  from: string;
   subject: string;
-  text?: string;
-  html?: string;
+  body: string;
+  recipient: string;
 }
 
-export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
+const ses = new SESClient({ region: 'ap-south-1' });
+
+async function sendMail(event: SQSEvent, context: Context): Promise<any> {
   try {
-    if (!event.body) {
-      return {
-        statusCode: 400,
-        body: JSON.stringify({ message: 'Missing request body' })
-      };
-    }
+    const record: SQSRecord = event.Records[0];
+    console.log('Email Processing ', record);
 
-    const payload: EmailPayload = JSON.parse(event.body);
-    
-    // Validate required fields
-    if (!payload.to || !payload.from || !payload.subject) {
-      return {
-        statusCode: 400,
-        body: JSON.stringify({ message: 'Missing required email fields' })
-      };
-    }
-
-    // Convert to array if single recipient
-    const toAddresses = Array.isArray(payload.to) ? payload.to : [payload.to];
+    const email: EmailPayload = JSON.parse(record.body);
+    const { subject, body, recipient } = email;
 
     const params = {
-      Source: payload.from,
+      Source: 'sameer.generalist@gmail.com',
       Destination: {
-        ToAddresses: toAddresses
+        ToAddresses: [recipient],
       },
       Message: {
-        Subject: {
-          Data: payload.subject,
-          Charset: 'UTF-8'
-        },
         Body: {
-          ...(payload.text && {
-            Text: {
-              Data: payload.text,
-              Charset: 'UTF-8'
-            }
-          }),
-          ...(payload.html && {
-            Html: {
-              Data: payload.html,
-              Charset: 'UTF-8'
-            }
-          })
-        }
-      }
+          Text: {
+            Data: body,
+          },
+        },
+        Subject: {
+          Data: subject,
+        },
+      },
     };
 
-    await ses.send(new SendEmailCommand(params));
-
-    return {
-      statusCode: 200,
-      body: JSON.stringify({ message: 'Email sent successfully' })
-    };
+    const command = new SendEmailCommand(params);
+    const result = await ses.send(command);
+    console.log(result);
+    return result;
   } catch (error) {
-    console.error('Error sending email:', error);
-    
-    // return {
-    //   statusCode: 500,
-    //   body: JSON.stringify({
-    //     message: 'Failed to send email',
-    //     error: (error as Error).message
-    //   })
-    // };
+    console.error(error);
+    throw error; // Re-throw to ensure AWS Lambda marks this as a failed execution
   }
-}; 
+}
+
+export const handler = sendMail;

@@ -1,17 +1,15 @@
 import * as esbuild from 'esbuild';
 
-const config = {
-  entryPoints: [
-    'src/handlers/sendMail.ts'
-  ],
+await esbuild.build({
+  entryPoints: ['src/handlers/sendMail.ts'],
   bundle: true,
-  minify: false,
-  sourcemap: true,
-  format: 'esm',
-  target: 'node22',
-  platform: 'node',
   outdir: 'dist',
-  external: ['aws-lambda']
-};
-
-esbuild.build(config).catch(() => process.exit(1));
+  platform: 'node',
+  target: 'node22',
+  format: 'esm',
+  sourcemap: true,
+  external: ['@aws-sdk/client-ses'],
+  outExtension: { '.js': '.js' },
+  minify: true,
+  treeShaking: true,
+});
