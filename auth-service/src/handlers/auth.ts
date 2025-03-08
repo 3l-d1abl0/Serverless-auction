@@ -1,7 +1,12 @@
-import { APIGatewayTokenAuthorizerEvent, AuthResponse } from 'aws-lambda';
-import jwt from 'jsonwebtoken';
-import { Claims, AuthResponse as CustomAuthResponse } from '../types/api-types';
+import { jwtVerify } from 'jose';
+import { createPublicKey, X509Certificate } from 'crypto';
+import type { APIGatewayTokenAuthorizerEvent } from 'aws-lambda';
+import type { Claims, AuthResponse as CustomAuthResponse } from '../types/api-types';
 
+
+// By default, API Gateway authorizations are cached (TTL) for 300 seconds.
+// This policy will authorize all requests to the same API Gateway instance where the
+// request is coming from, thus being efficient and optimising costs.
 const generatePolicy = (principalId: string, methodArn: string): CustomAuthResponse => {
 
   const apiGatewayWildcard = methodArn.split('/', 2).join('/') + '/*';
@@ -22,7 +27,6 @@ const generatePolicy = (principalId: string, methodArn: string): CustomAuthRespo
 };
 
 export const handler = async (event: APIGatewayTokenAuthorizerEvent): Promise<CustomAuthResponse> => {
-  
   if (!event.authorizationToken) {
     throw 'Unauthorized';
   }
@@ -30,7 +34,18 @@ export const handler = async (event: APIGatewayTokenAuthorizerEvent): Promise<Cu
   const token = event.authorizationToken.replace('Bearer ', '');
 
   try {
-    const claims = jwt.verify(token, process.env.AUTH0_PUBLIC_KEY!) as Claims;
+    // Import the public key as a crypto key
+    const publicKeyPEM = process.env.AUTH0_PUBLIC_KEY!;
+    // Create X509 certificate from PEM
+    const cert = new X509Certificate(publicKeyPEM);
+    const key = cert.publicKey;
+
+    // Verify the token
+    const { payload } = await jwtVerify(token, key, {
+      algorithms: ['RS256'] 
+    });
+    const claims = payload as unknown as Claims;
+    
     const policy = generatePolicy(claims.sub, event.methodArn);
 
     return {

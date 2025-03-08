@@ -5,7 +5,6 @@ export const handler = async (
   event: APIGatewayProxyEvent,
   context: Context
 ): Promise<APIGatewayProxyResult> => {
-  const claims = event.requestContext.authorizer as Claims;
   
   // Log the Lambda context
   console.log('Lambda Context:', {
@@ -16,6 +15,11 @@ export const handler = async (
     remainingTime: context.getRemainingTimeInMillis(),
   });
   
+  //const claims = event.requestContext.authorizer as Claims;
+  //console.log(event);
+  
+  /* Required for CORS support to work */
+  /* Required for cookies, authorization headers with HTTPS */
   return {
     statusCode: 200,
     headers: {
@@ -24,7 +28,8 @@ export const handler = async (
     },
     body: JSON.stringify({
       message: 'Hi ⊂◉‿◉つ from Private API',
-      claims,
+      event,
+      context
     }),
   };
 };
