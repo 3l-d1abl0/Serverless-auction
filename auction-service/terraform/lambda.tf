@@ -99,6 +99,15 @@ resource "aws_iam_role_policy" "sqs" {
   })
 }
 
+# CloudWatch Log Groups for Lambda functions
+resource "aws_cloudwatch_log_group" "lambda_logs" {
+  for_each = toset(local.handlers)
+
+  name              = "/aws/lambda/${local.service_name}-${var.environment}-${each.value}"
+  retention_in_days = var.log_retention_days
+  tags              = local.common_tags
+}
+
 # Lambda functions
 resource "aws_lambda_function" "handlers" {
   for_each = toset(local.handlers)
@@ -110,13 +119,14 @@ resource "aws_lambda_function" "handlers" {
   runtime         = local.lambda_runtime
   memory_size     = var.lambda_memory
   timeout         = var.lambda_timeout
+  package_type    = "Zip"
 
   environment {
     variables = {
       AUCTIONS_TABLE_NAME = aws_dynamodb_table.auctions.name
       AUCTIONS_BUCKET_NAME = aws_s3_bucket.auctions.id
       MAIL_QUEUE_URL = local.mail_queue_url
-      NODE_OPTIONS = "--enable-source-maps"
+      NODE_OPTIONS = "--enable-source-maps --experimental-specifier-resolution=node"
     }
   }
 
@@ -125,6 +135,7 @@ resource "aws_lambda_function" "handlers" {
     aws_iam_role_policy.s3,
     aws_iam_role_policy.cloudwatch,
     aws_iam_role_policy.sqs,
+    aws_cloudwatch_log_group.lambda_logs,
     null_resource.build_typescript
   ]
 
