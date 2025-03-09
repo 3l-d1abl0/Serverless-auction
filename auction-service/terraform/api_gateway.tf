@@ -28,8 +28,8 @@ resource "aws_apigatewayv2_authorizer" "auctions" {
   name            = "lambda-authorizer"
   
   # Required for HTTP APIs with REQUEST authorizer
-  authorizer_payload_format_version = "2.0"
-  enable_simple_responses          = true
+  authorizer_payload_format_version = "1.0"
+  #enable_simple_responses          = true
 }
 
 # Routes and integrations
