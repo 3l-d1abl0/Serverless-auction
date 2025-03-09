@@ -1,41 +1,42 @@
-import AWS from 'aws-sdk';
-import commonMiddleware from '../lib/commonMiddleware';
+import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
+import { DynamoDBDocumentClient, GetCommand } from '@aws-sdk/lib-dynamodb';
 import createError from 'http-errors';
-import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
+import { LambdaHandler } from '../lib/commonMiddleware';
+import commonMiddleware from '../lib/commonMiddleware';
 import { Auction } from '../types/auction';
+import config from '../lib/config';
 
-const dynamodb = new AWS.DynamoDB.DocumentClient();
+const dynamoClient = new DynamoDBClient({});
+const docClient = DynamoDBDocumentClient.from(dynamoClient);
 
-export async function getAuctionById(id: string): Promise<Auction> {
+interface PathParams {
+  id: string;
+}
+
+const getAuction: LambdaHandler<any, PathParams> = async (event) => {
+  const { id } = event.pathParameters;
   let auction: Auction;
 
   try {
-    const result = await dynamodb.get({
-      TableName: process.env.AUCTIONS_TABLE_NAME,
+    const result = await docClient.send(new GetCommand({
+      TableName: config.AUCTIONS_TABLE_NAME,
       Key: { id },
-    }).promise();
+    }));
 
-    auction = result.Item;
+    if (!result.Item) {
+      throw new createError.NotFound(`Auction with ID "${id}" not found`);
+    }
+
+    auction = result.Item as Auction;
   } catch (error) {
     console.error(error);
-    throw new createError.InternalServerError(error);
+    throw new createError.InternalServerError((error as Error).message);
   }
-
-  if (!auction) {
-    throw new createError.NotFound(`Auction with ID "${id}" not Found !`);
-  }
-
-  return auction;
-}
-
-async function getAuction(event: APIGatewayProxyEvent & { pathParameters: { id: string } }): Promise<APIGatewayProxyResult> {
-  const { id } = event.pathParameters;
-  const auction = await getAuctionById(id);
 
   return {
     statusCode: 200,
     body: JSON.stringify(auction),
   };
-}
+};
 
 export const handler = commonMiddleware(getAuction);

@@ -1,4 +1,4 @@
-export const createAuctionSchema = {
+const createAuctionSchema = {
   type: 'object',
   properties: {
     body: {
@@ -13,3 +13,5 @@ export const createAuctionSchema = {
 } as const;
 
 export type CreateAuctionSchema = typeof createAuctionSchema;
+
+export default createAuctionSchema;

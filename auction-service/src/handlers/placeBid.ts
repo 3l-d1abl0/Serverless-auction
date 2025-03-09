@@ -1,71 +1,99 @@
-import AWS from 'aws-sdk';
+import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
+import { DynamoDBDocumentClient, GetCommand, UpdateCommand } from '@aws-sdk/lib-dynamodb';
 import createError from 'http-errors';
 import validator from '@middy/validator';
-import placeBidSchema from '../lib/schemas/placeBidSchema';
+import { LambdaHandler } from '../lib/commonMiddleware';
 import commonMiddleware from '../lib/commonMiddleware';
-import { getAuctionById } from './getAuction';
-import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
+import placeBidSchema from '../lib/schemas/placeBidSchema';
 import { Auction } from '../types/auction';
+import config from '../lib/config';
 
-const dynamodb = new AWS.DynamoDB.DocumentClient();
+const dynamoClient = new DynamoDBClient({});
+const docClient = DynamoDBDocumentClient.from(dynamoClient);
 
-async function placeBid(event: APIGatewayProxyEvent & { 
-  pathParameters: { id: string }, 
-  body: { amount: number },
-  requestContext: { authorizer: { email: string } }
-}): Promise<APIGatewayProxyResult> {
+interface PathParams {
+  id: string;
+}
+
+interface BidBody {
+  amount: number;
+}
+
+async function getAuctionById(id: string): Promise<Auction> {
+  let auction: Auction;
+
+  try {
+    const result = await docClient.send(new GetCommand({
+      TableName: config.AUCTIONS_TABLE_NAME,
+      Key: { id },
+    }));
+
+    if (!result.Item) {
+      throw new createError.NotFound(`Auction with ID "${id}" not found`);
+    }
+
+    auction = result.Item as Auction;
+  } catch (error) {
+    console.error(error);
+    throw new createError.InternalServerError((error as Error).message);
+  }
+
+  return auction;
+}
+
+const placeBid: LambdaHandler<BidBody, PathParams> = async (event) => {
   const { id } = event.pathParameters;
   const { amount } = event.body;
   const { email } = event.requestContext.authorizer;
 
   const auction = await getAuctionById(id);
 
-  // if Bidder is the Seller
+  // Bid identity validation
   if (email === auction.seller) {
-    throw new createError.Forbidden(`Cant bid on your own auctions !`);
+    throw new createError.Forbidden(`You cannot bid on your own auctions!`);
   }
 
-  // check if user is already the highest bidder
+  // Avoid double bidding
   if (email === auction.highestBid.bidder) {
-    throw new createError.Forbidden(`Already the highest Bidder !`);
+    throw new createError.Forbidden(`You are already the highest bidder`);
   }
 
-  // check if auction is closed
+  // Auction status validation
   if (auction.status !== 'OPEN') {
-    throw new createError.Forbidden(`You cannot bid on closed Auctions`);
+    throw new createError.Forbidden(`You cannot bid on closed auctions!`);
   }
 
-  // check if bid amount is less than the highest Bid
+  // Bid amount validation
   if (amount <= auction.highestBid.amount) {
-    throw new createError.Forbidden(`Your bid must be higher than ${auction.highestBid.amount}`);
+    throw new createError.Forbidden(`Your bid must be higher than ${auction.highestBid.amount}!`);
   }
 
-  const params = {
-    TableName: process.env.AUCTIONS_TABLE_NAME,
-    Key: { id },
-    UpdateExpression: 'set highestBid.amount = :amount, highestBid.bidder = :bidder',
-    ExpressionAttributeValues: {
-      ':amount': amount,
-      ':bidder': email,
-    },
-    ReturnValues: 'ALL_NEW',
-  };
-
-  // execute sdk
   let updatedAuction: Auction;
+
   try {
-    const result = await dynamodb.update(params).promise();
-    updatedAuction = result.Attributes;
+    const params = {
+      TableName: config.AUCTIONS_TABLE_NAME,
+      Key: { id },
+      UpdateExpression: 'set highestBid.amount = :amount, highestBid.bidder = :bidder',
+      ExpressionAttributeValues: {
+        ':amount': amount,
+        ':bidder': email,
+      },
+      ReturnValues: 'ALL_NEW' as const,
+    };
+
+    const result = await docClient.send(new UpdateCommand(params));
+    updatedAuction = result.Attributes as Auction;
   } catch (error) {
     console.error(error);
-    throw new createError.InternalServerError(error);
+    throw new createError.InternalServerError((error as Error).message);
   }
 
   return {
     statusCode: 200,
     body: JSON.stringify(updatedAuction),
   };
-}
+};
 
 export const handler = commonMiddleware(placeBid)
-  .use(validator({ inputSchema: placeBidSchema }));
+  .use(validator({ eventSchema: placeBidSchema }));

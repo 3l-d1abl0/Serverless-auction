@@ -3,21 +3,26 @@ import { DynamoDBDocumentClient, PutCommand } from '@aws-sdk/lib-dynamodb';
 import { v4 as uuid } from 'uuid';
 import createError from 'http-errors';
 import validator from '@middy/validator';
-import commonMiddleware from '../lib/commonMiddleware.js';
-import { createAuctionSchema } from '../lib/schemas/createAuctionSchema.js';
-import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
+import commonMiddleware from '../lib/commonMiddleware';
+import createAuctionSchema from '../lib/schemas/createAuctionSchema';
+import { LambdaHandler } from '../lib/commonMiddleware';
 import { Auction } from '../types/auction';
+import config from '../lib/config';
 
 const dynamoClient = new DynamoDBClient({});
 const docClient = DynamoDBDocumentClient.from(dynamoClient);
 
-async function createAuction(event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> {
+interface CreateAuctionBody {
+  title: string;
+}
+
+const createAuction: LambdaHandler<CreateAuctionBody> = async (event) => {
   if (!event.body) {
     throw new createError.BadRequest('Missing request body');
   }
 
-  const { title } = JSON.parse(event.body) as { title: string };
-  const email = event.requestContext.authorizer?.email;
+  const { title } = event.body;
+  const { email } = event.requestContext.authorizer;
 
   if (!title) {
     throw new createError.BadRequest('Title is required');
@@ -45,7 +50,7 @@ async function createAuction(event: APIGatewayProxyEvent): Promise<APIGatewayPro
 
   try {
     await docClient.send(new PutCommand({
-      TableName: process.env.AUCTIONS_TABLE_NAME,
+      TableName: config.AUCTIONS_TABLE_NAME,
       Item: auction,
     }));
   } catch (error) {
@@ -57,7 +62,7 @@ async function createAuction(event: APIGatewayProxyEvent): Promise<APIGatewayPro
     statusCode: 201,
     body: JSON.stringify(auction),
   };
-}
+};
 
-export const handler = commonMiddleware(createAuction)
+export const handler = commonMiddleware<CreateAuctionBody>(createAuction)
   .use(validator({ eventSchema: createAuctionSchema }));

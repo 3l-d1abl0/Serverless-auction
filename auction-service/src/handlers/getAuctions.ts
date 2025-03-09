@@ -1,43 +1,49 @@
-import AWS from 'aws-sdk';
+import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
+import { DynamoDBDocumentClient, QueryCommand } from '@aws-sdk/lib-dynamodb';
 import createError from 'http-errors';
 import validator from '@middy/validator';
-import getAuctionsSchema from '../lib/schemas/getAuctionsSchema';
+import { LambdaHandler } from '../lib/commonMiddleware';
 import commonMiddleware from '../lib/commonMiddleware';
-import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
+import getAuctionsSchema from '../lib/schemas/getAuctionsSchema';
 import { Auction } from '../types/auction';
+import config from '../lib/config';
 
-const dynamodb = new AWS.DynamoDB.DocumentClient();
+const dynamoClient = new DynamoDBClient({});
+const docClient = DynamoDBDocumentClient.from(dynamoClient);
 
-async function getAuctions(event: APIGatewayProxyEvent & { queryStringParameters: { status: string } }): Promise<APIGatewayProxyResult> {
-  const { status } = event.queryStringParameters;
+interface QueryParams {
+  status?: string;
+}
 
+const getAuctions: LambdaHandler<unknown, {}, QueryParams> = async (event) => {
+  const { status } = event.queryStringParameters || {};
   let auctions: Auction[];
 
   const params = {
-    TableName: process.env.AUCTIONS_TABLE_NAME,
+    TableName: config.AUCTIONS_TABLE_NAME,
     IndexName: 'statusAndEndDate',
     KeyConditionExpression: '#status = :status',
     ExpressionAttributeValues: {
-      ':status': status,
+      ':status': status || 'OPEN',
     },
     ExpressionAttributeNames: {
       '#status': 'status',
-    }
+    },
   };
 
   try {
-    const result = await dynamodb.query(params).promise();
-    auctions = result.Items;
+    const result = await docClient.send(new QueryCommand(params));
+    auctions = result.Items as Auction[];
   } catch (error) {
     console.error(error);
-    throw new createError.InternalServerError(error);
+    throw new createError.InternalServerError((error as Error).message);
   }
 
   return {
     statusCode: 200,
     body: JSON.stringify(auctions),
   };
-}
+};
 
 export const handler = commonMiddleware(getAuctions)
-  .use(validator({ inputSchema: getAuctionsSchema, useDefaults: true }));
+  .use(validator({ eventSchema: getAuctionsSchema }));

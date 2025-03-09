@@ -11,3 +11,5 @@ export const placeBidSchema = {
   },
   required: ['body']
 } as const;
+
+export default placeBidSchema;
