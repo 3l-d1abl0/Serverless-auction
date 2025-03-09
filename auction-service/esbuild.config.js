@@ -29,10 +29,7 @@ for (const entryPoint of entryPoints) {
     format: 'esm',
     sourcemap: true,
     external: [
-      '@aws-sdk/*',
-      '@middy/*',
-      'aws-lambda',
-      'jsonwebtoken'
+      '@aws-sdk/*'
     ],
     define: {
       'process.env.NODE_ENV': `"${process.env.NODE_ENV || 'dev'}"`,

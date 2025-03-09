@@ -1,10 +1,8 @@
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import { DynamoDBDocumentClient, GetCommand, UpdateCommand } from '@aws-sdk/lib-dynamodb';
-import createError from 'http-errors';
-import validator from '@middy/validator';
-import { LambdaHandler } from '../lib/commonMiddleware';
-import commonMiddleware from '../lib/commonMiddleware';
-import placeBidSchema from '../lib/schemas/placeBidSchema';
+import CreateError from '../lib/errors';
+import { LambdaHandler } from '../lib/middleware';
+import middleware from '../lib/middleware';
 import { Auction } from '../types/auction';
 import config from '../lib/config';
 
@@ -29,13 +27,13 @@ async function getAuctionById(id: string): Promise<Auction> {
     }));
 
     if (!result.Item) {
-      throw new createError.NotFound(`Auction with ID "${id}" not found`);
+      throw CreateError.NotFound(`Auction with ID "${id}" not found`);
     }
 
     auction = result.Item as Auction;
   } catch (error) {
     console.error(error);
-    throw new createError.InternalServerError((error as Error).message);
+    throw CreateError.InternalServerError((error as Error).message);
   }
 
   return auction;
@@ -50,22 +48,22 @@ const placeBid: LambdaHandler<BidBody, PathParams> = async (event) => {
 
   // Bid identity validation
   if (email === auction.seller) {
-    throw new createError.Forbidden(`You cannot bid on your own auctions!`);
+    throw CreateError.Forbidden(`You cannot bid on your own auctions!`);
   }
 
   // Avoid double bidding
   if (email === auction.highestBid.bidder) {
-    throw new createError.Forbidden(`You are already the highest bidder`);
+    throw CreateError.Forbidden(`You are already the highest bidder`);
   }
 
   // Auction status validation
   if (auction.status !== 'OPEN') {
-    throw new createError.Forbidden(`You cannot bid on closed auctions!`);
+    throw CreateError.Forbidden(`You cannot bid on closed auctions!`);
   }
 
   // Bid amount validation
   if (amount <= auction.highestBid.amount) {
-    throw new createError.Forbidden(`Your bid must be higher than ${auction.highestBid.amount}!`);
+    throw CreateError.Forbidden(`Your bid must be higher than ${auction.highestBid.amount}!`);
   }
 
   let updatedAuction: Auction;
@@ -86,7 +84,7 @@ const placeBid: LambdaHandler<BidBody, PathParams> = async (event) => {
     updatedAuction = result.Attributes as Auction;
   } catch (error) {
     console.error('ERROR: ', error);
-    throw new createError.InternalServerError((error as Error).message);
+    throw CreateError.InternalServerError((error as Error).message);
   }
 
   return {
@@ -95,5 +93,4 @@ const placeBid: LambdaHandler<BidBody, PathParams> = async (event) => {
   };
 };
 
-export const handler = commonMiddleware(placeBid)
-  .use(validator({ eventSchema: placeBidSchema }));
+export const handler = middleware(placeBid);

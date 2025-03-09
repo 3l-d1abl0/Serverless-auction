@@ -1,8 +1,8 @@
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import { DynamoDBDocumentClient, GetCommand } from '@aws-sdk/lib-dynamodb';
-import createError from 'http-errors';
-import { LambdaHandler } from '../lib/commonMiddleware';
-import commonMiddleware from '../lib/commonMiddleware';
+import CreateError from '../lib/errors';
+import { LambdaHandler } from '../lib/middleware';
+import middleware from '../lib/middleware';
 import { Auction } from '../types/auction';
 import config from '../lib/config';
 
@@ -24,13 +24,13 @@ const getAuction: LambdaHandler<any, PathParams> = async (event) => {
     }));
 
     if (!result.Item) {
-      throw new createError.NotFound(`Auction with ID "${id}" not found`);
+      throw CreateError.NotFound(`Auction with ID "${id}" not found`);
     }
 
     auction = result.Item as Auction;
   } catch (error) {
     console.error('ERROR: ',error);
-    throw new createError.InternalServerError((error as Error).message);
+    throw CreateError.InternalServerError((error as Error).message);
   }
 
   return {
@@ -39,4 +39,4 @@ const getAuction: LambdaHandler<any, PathParams> = async (event) => {
   };
 };
 
-export const handler = commonMiddleware(getAuction);
+export const handler = middleware(getAuction);

@@ -1,11 +1,9 @@
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import { DynamoDBDocumentClient, PutCommand } from '@aws-sdk/lib-dynamodb';
-import { v4 as uuid } from 'uuid';
-import createError from 'http-errors';
-import validator from '@middy/validator';
-import commonMiddleware from '../lib/commonMiddleware';
-import createAuctionSchema from '../lib/schemas/createAuctionSchema';
-import { LambdaHandler } from '../lib/commonMiddleware';
+import uuid from '../lib/uuid';
+import CreateError from '../lib/errors';
+import { LambdaHandler } from '../lib/middleware';
+import middleware from '../lib/middleware';
 import { Auction } from '../types/auction';
 import config from '../lib/config';
 
@@ -18,18 +16,18 @@ interface CreateAuctionBody {
 
 const createAuction: LambdaHandler<CreateAuctionBody> = async (event) => {
   if (!event.body) {
-    throw new createError.BadRequest('Missing request body');
+    throw CreateError.BadRequest('Missing request body');
   }
 
   const { title } = event.body;
   const { email } = event.requestContext.authorizer;
 
   if (!title) {
-    throw new createError.BadRequest('Title is required');
+    throw CreateError.BadRequest('Title is required');
   }
 
   if (!email) {
-    throw new createError.Unauthorized('Email is required');
+    throw CreateError.Unauthorized('Email is required');
   }
 
   const now = new Date();
@@ -37,7 +35,7 @@ const createAuction: LambdaHandler<CreateAuctionBody> = async (event) => {
   endDate.setHours(now.getHours() + 1);
 
   const auction: Auction = {
-    id: uuid(),
+    id: uuid.v4(),
     title,
     status: 'OPEN',
     createdAt: now.toISOString(),
@@ -54,8 +52,8 @@ const createAuction: LambdaHandler<CreateAuctionBody> = async (event) => {
       Item: auction,
     }));
   } catch (error) {
-    console.error('ERROR: ',error);
-    throw new createError.InternalServerError((error as Error).message);
+    console.error(error);
+    throw CreateError.InternalServerError((error as Error).message);
   }
 
   return {
@@ -64,5 +62,4 @@ const createAuction: LambdaHandler<CreateAuctionBody> = async (event) => {
   };
 };
 
-export const handler = commonMiddleware<CreateAuctionBody>(createAuction)
-  .use(validator({ eventSchema: createAuctionSchema }));
+export const handler = middleware(createAuction);

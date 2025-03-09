@@ -1,10 +1,8 @@
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import { DynamoDBDocumentClient, QueryCommand } from '@aws-sdk/lib-dynamodb';
-import createError from 'http-errors';
-import validator from '@middy/validator';
-import { LambdaHandler } from '../lib/commonMiddleware';
-import commonMiddleware from '../lib/commonMiddleware';
-import getAuctionsSchema from '../lib/schemas/getAuctionsSchema';
+import CreateError from '../lib/errors';
+import { LambdaHandler } from '../lib/middleware';
+import middleware from '../lib/middleware';
 import { Auction } from '../types/auction';
 import config from '../lib/config';
 
@@ -36,7 +34,7 @@ const getAuctions: LambdaHandler<unknown, {}, QueryParams> = async (event) => {
     auctions = result.Items as Auction[];
   } catch (error) {
     console.error('ERROR: ',error);
-    throw new createError.InternalServerError((error as Error).message);
+    throw CreateError.InternalServerError((error as Error).message);
   }
 
   return {
@@ -45,5 +43,4 @@ const getAuctions: LambdaHandler<unknown, {}, QueryParams> = async (event) => {
   };
 };
 
-export const handler = commonMiddleware(getAuctions)
-  .use(validator({ eventSchema: getAuctionsSchema }));
+export const handler = middleware(getAuctions);
