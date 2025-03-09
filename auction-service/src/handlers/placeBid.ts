@@ -42,7 +42,7 @@ async function getAuctionById(id: string): Promise<Auction> {
 const placeBid: LambdaHandler<BidBody, PathParams> = async (event) => {
   const { id } = event.pathParameters;
   const { amount } = event.body;
-  const { email } = event.requestContext.authorizer;
+  const email  = event.requestContext.authorizer.lambda.email;
 
   const auction = await getAuctionById(id);
 

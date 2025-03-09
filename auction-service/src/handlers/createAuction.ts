@@ -20,7 +20,9 @@ const createAuction: LambdaHandler<CreateAuctionBody> = async (event) => {
   }
 
   const { title } = event.body;
-  const { email } = event.requestContext.authorizer;
+  const email  = event.requestContext.authorizer.lambda.email;
+
+  //console.log('authorizer: ', event.requestContext.authorizer);
 
   if (!title) {
     throw CreateError.BadRequest('Title is required');
@@ -52,7 +54,7 @@ const createAuction: LambdaHandler<CreateAuctionBody> = async (event) => {
       Item: auction,
     }));
   } catch (error) {
-    console.error(error);
+    console.error("ERROR: ",error);
     throw CreateError.InternalServerError((error as Error).message);
   }
 

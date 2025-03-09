@@ -7,7 +7,20 @@ import { APIGatewayProxyEvent, APIGatewayProxyResult, Handler } from 'aws-lambda
 
 // Define custom authorizer type
 export interface CustomAuthorizer {
-  email: string;
+   lambda: {
+       email: string;
+        aud: string;
+        email_verified: string;
+         exp: string;
+        iat: string;
+         iss: string;
+         name: string;
+         nickname: string;
+         picture: string;
+        sub: string;
+         updated_at: string;
+         [key: string]: any;
+      };
 }
 
 // Define custom event type that ensures required properties

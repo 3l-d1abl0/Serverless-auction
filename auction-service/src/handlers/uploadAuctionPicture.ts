@@ -15,8 +15,18 @@ interface PathParams {
 }
 
 const uploadAuctionPicture: LambdaHandler<any, PathParams> = async (event) => {
+
   const { id } = event.pathParameters;
-  const { email } = event.requestContext.authorizer;
+  const email  = event.requestContext.authorizer.lambda.email;
+  
+  if (!event.body) {
+    throw CreateError.BadRequest('Missing request body');
+  }
+  
+  if (!event.body.includes('data:image')) {
+    throw CreateError.BadRequest('Invalid image format. Image must be base64 encoded with data:image prefix');
+  }
+  
   const base64 = event.body.replace(/^data:image\/\w+;base64,/, '');
   const buffer = Buffer.from(base64, 'base64');
 
