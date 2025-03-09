@@ -54,7 +54,7 @@ const createAuction: LambdaHandler<CreateAuctionBody> = async (event) => {
       Item: auction,
     }));
   } catch (error) {
-    console.error(error);
+    console.error('ERROR: ',error);
     throw new createError.InternalServerError((error as Error).message);
   }
 

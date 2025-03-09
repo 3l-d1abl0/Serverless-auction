@@ -35,7 +35,7 @@ const getAuctions: LambdaHandler<unknown, {}, QueryParams> = async (event) => {
     const result = await docClient.send(new QueryCommand(params));
     auctions = result.Items as Auction[];
   } catch (error) {
-    console.error(error);
+    console.error('ERROR: ',error);
     throw new createError.InternalServerError((error as Error).message);
   }
 

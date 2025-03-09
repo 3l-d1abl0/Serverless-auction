@@ -29,7 +29,7 @@ const getAuction: LambdaHandler<any, PathParams> = async (event) => {
 
     auction = result.Item as Auction;
   } catch (error) {
-    console.error(error);
+    console.error('ERROR: ',error);
     throw new createError.InternalServerError((error as Error).message);
   }
 

@@ -85,7 +85,7 @@ const placeBid: LambdaHandler<BidBody, PathParams> = async (event) => {
     const result = await docClient.send(new UpdateCommand(params));
     updatedAuction = result.Attributes as Auction;
   } catch (error) {
-    console.error(error);
+    console.error('ERROR: ', error);
     throw new createError.InternalServerError((error as Error).message);
   }
 
