@@ -1,12 +1,12 @@
 service: service-en-auction
 
 plugins:
-  - serverless-bundle
+  - serverless-plugin-typescript
   - serverless-pseudo-parameters
 
 provider:
   name: aws
-  runtime: nodejs12.x
+  runtime: nodejs22.x
   memorySize: 256
   stage: ${opt:stage, 'dev'}
   region: ap-south-1
@@ -14,10 +14,12 @@ provider:
     AUCTIONS_TABLE_NAME: ${self:custom.AuctionsTable.name}
     MAIL_QUEUE_URL: ${self:custom.MailQueue.url}
     AUCTIONS_BUCKET_NAME: ${self:custom.AuctionsBucket.name}
-  iamRoleStatements:
-    - ${file(iam/AuctionsTableIam.yml):AuctionsTableIam}
-    - ${file(iam/MailQueueIAM.yml):MailQueueIAM}
-    - ${file(iam/AuctionsBucketIAM.yml):AuctionsBucketIAM}
+  iam:
+    role:
+      statements:
+        - ${file(iam/AuctionsTableIam.yml):AuctionsTableIam}
+        - ${file(iam/MailQueueIAM.yml):MailQueueIAM}
+        - ${file(iam/AuctionsBucketIAM.yml):AuctionsBucketIAM}
 
   
 resources:
@@ -72,11 +74,10 @@ functions:
           path: auction/{id}/picture
           authorizer: ${self:custom.authorizer}
 
-
   processAuctions:
     handler: src/handlers/processAuctions.handler
-    #events:
-    #  - schedule: rate(1 minute)
+    events:
+      - schedule: rate(1 minute)
 
 custom:
   authorizer: arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:auth-service-${self:provider.stage}-auth
@@ -88,5 +89,5 @@ custom:
     url: ${cf:notification-service-${self:provider.stage}.MailQueueUrl}
   AuctionsBucket:
     name: auctions-bucket-qwestringdgs-${self:provider.stage}
-  bundle:
-    linting: true
+  typescript:
+    enableSourceMaps: true
