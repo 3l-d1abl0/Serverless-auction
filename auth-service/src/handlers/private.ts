@@ -7,7 +7,7 @@ export const handler = async (
 ): Promise<APIGatewayProxyResult> => {
   
   // Log the Lambda context
-  console.log('Lambda Context:', {
+  /*console.log('Lambda Context:', {
     awsRequestId: context.awsRequestId,
     functionName: context.functionName,
     functionVersion: context.functionVersion,
@@ -15,8 +15,9 @@ export const handler = async (
     remainingTime: context.getRemainingTimeInMillis(),
   });
   
-  //const claims = event.requestContext.authorizer as Claims;
-  //console.log(event);
+  const claims = event.requestContext.authorizer as Claims;
+  console.log(event);
+  */
   
   /* Required for CORS support to work */
   /* Required for cookies, authorization headers with HTTPS */

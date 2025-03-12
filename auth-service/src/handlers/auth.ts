@@ -27,11 +27,13 @@ const generatePolicy = (principalId: string, methodArn: string): CustomAuthRespo
 };
 
 export const handler = async (event: APIGatewayTokenAuthorizerEvent): Promise<CustomAuthResponse> => {
+  
   if (!event.authorizationToken) {
-    throw 'Unauthorized';
+    throw 'Unauthorized - No authorization Token !';
   }
 
   const token = event.authorizationToken.replace('Bearer ', '');
+
 
   try {
     // Import the public key as a crypto key
@@ -45,7 +47,6 @@ export const handler = async (event: APIGatewayTokenAuthorizerEvent): Promise<Cu
       algorithms: ['RS256'] 
     });
     const claims = payload as unknown as Claims;
-    
     const policy = generatePolicy(claims.sub, event.methodArn);
 
     return {
@@ -53,7 +54,7 @@ export const handler = async (event: APIGatewayTokenAuthorizerEvent): Promise<Cu
       context: claims
     };
   } catch (error) {
-    console.log(error);
-    throw 'Unauthorized';
+    console.log('ERROR: ',error);
+    throw 'Unauthorized- Unexpected Error !';
   }
 };
